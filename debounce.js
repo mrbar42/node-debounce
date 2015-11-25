@@ -17,48 +17,62 @@ function Debounce(conf, cb) {
     var _this = this;
     conf = conf || {};
 
-    var pending = false;
+
     var firstHit = 0;
     var lastExec = 0;
-    var timer = null;
-    var execLock = false;
-    var debounceLock = false;
+    var currentDelay = 0;
+    var timer, pending, execLock, debounceLock, rollingMax;
 
     this.hit = function () {
-
         if (execLock) {
             pending = true;
             return
         }
 
         if (debounceLock) {
-            if (conf.rollingBump) {
+            if (conf.rollingBump && !rollingMax) {
                 let diff = +new Date - firstHit;
-                if (!conf.rollingMax || diff < conf.rollingMax) {
-                    clearTimeout(timer);
-                    timer = setTimeout(exec, Math.min(diff + conf.rollingBump, conf.rollingMax - diff));
+                let newTarget = diff + conf.rollingBump;
+                if (newTarget < currentDelay) {
+                    // this bump will not change anything
+                    return
                 }
+
+                newTarget += conf.rollingBump * 0.1;
+
+                let newDelay;
+                if (conf.rollingMax && newTarget > conf.rollingMax) {
+                    rollingMax = true;
+                    currentDelay = conf.rollingMax;
+                    newDelay = conf.rollingMax - diff;
+                }
+                else {
+                    currentDelay = newTarget;
+                    newDelay = conf.rollingBump
+                }
+                clearTimeout(timer);
+                timer = setTimeout(exec, newDelay);
             }
+
             return
         }
 
         // not locked - start debounce
         debounceLock = true;
         firstHit = +new Date;
+        currentDelay = conf.delay;
         clearTimeout(timer);
-        timer = setTimeout(exec, conf.delay);
+        timer = setTimeout(exec, currentDelay);
     };
 
     function exec() {
-        debounceLock = false;
+        debounceLock = rollingMax = false;
         execLock = true;
-        if (conf.wait) {
-            cb(freeLock);
-        }
-        else {
-            cb();
-            freeLock();
-        }
+
+        if (conf.wait) return cb(freeLock);
+
+        cb();
+        freeLock();
     }
 
     function freeLock() {
