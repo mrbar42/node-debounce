@@ -3,18 +3,19 @@
 /**
  * Simple Debounce/Throttle module
  *
- * @param {Object|null} [conf] - conf object
+ * @param {Object|null|*} [conf] - conf object
  *   @param {Number}    conf.delay          delay execution. default: 200
  *   @param {Number}    conf.rollingBump    bump debounce by this number until max. default: 0 (disabled)
  *   @param {Number}    conf.rollingMax     maximum absolute delay that allowed (limits bumps). default: 0 (disabled)
  *   @param {Number}    conf.coolTime       minimum time between executions. default: 0 (disabled)
  *   @param {Boolean}   conf.trailing       weather to run one more time if there was any hit while executing. default: true
  *   @param {Boolean}   conf.wait           adds a 'done' callback to the debounced function. if false - 'done' is undefined!. default: true
- * @param {Function} cb - callback debounce
+ * @param {Function|*} cb - callback debounce
  * @constructor
  */
 function Debounce(conf, cb) {
     var _this = this;
+    cb = typeof conf == 'function' && conf || cb;
     conf = conf || {};
 
 
@@ -38,7 +39,7 @@ function Debounce(conf, cb) {
                     return
                 }
 
-                newTarget += conf.rollingBump * 0.1;
+                newTarget += Math.min(conf.rollingBump * 0.1, 100);
 
                 let newDelay;
                 if (conf.rollingMax && newTarget > conf.rollingMax) {
@@ -77,25 +78,22 @@ function Debounce(conf, cb) {
 
     function freeLock() {
         debounceLock = false;
-        if (conf.coolTime) {
-            setTimeout(()=> {
-                lastExec = +new Date;
-                execLock = false;
+        let now = +new Date;
+        let sinceLastExec = lastExec && (now - lastExec);
+        lastExec = now;
 
-                if (pending && conf.trailing) {
-                    pending = false;
-                    _this.hit()
-                }
-            }, conf.coolTime)
+        if (conf.coolTime && typeof sinceLastExec == 'number' && conf.coolTime > sinceLastExec) {
+            return setTimeout(unlock, conf.coolTime - sinceLastExec);
         }
-        else {
-            lastExec = +new Date;
-            execLock = false;
+        unlock()
+    }
 
-            if (pending && conf.trailing) {
-                pending = false;
-                _this.hit()
-            }
+    function unlock() {
+        execLock = false;
+
+        if (pending && conf.trailing) {
+            pending = false;
+            _this.hit()
         }
     }
 }
