@@ -78,12 +78,9 @@ function Debounce(conf, cb) {
 
     function freeLock() {
         debounceLock = false;
-        let now = +new Date;
-        let sinceLastExec = lastExec && (now - lastExec);
-        lastExec = now;
 
-        if (conf.coolTime && typeof sinceLastExec == 'number' && conf.coolTime > sinceLastExec) {
-            return setTimeout(unlock, conf.coolTime - sinceLastExec);
+        if (conf.coolTime) {
+            return setTimeout(unlock, conf.coolTime);
         }
         unlock()
     }
@@ -91,7 +88,7 @@ function Debounce(conf, cb) {
     function unlock() {
         execLock = false;
 
-        if (pending && conf.trailing) {
+        if (conf.trailing && pending) {
             pending = false;
             _this.hit()
         }
