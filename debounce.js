@@ -18,9 +18,7 @@ function Debounce(conf, cb) {
     cb = typeof conf == 'function' && conf || cb;
     conf = conf || {};
 
-
     var firstHit = 0;
-    var lastExec = 0;
     var currentDelay = 0;
     var timer, pending, execLock, debounceLock, rollingMax;
 
@@ -70,7 +68,7 @@ function Debounce(conf, cb) {
         debounceLock = rollingMax = false;
         execLock = true;
 
-        if (conf.wait) return cb(freeLock);
+        if (conf.wait !== false) return cb(freeLock);
 
         cb();
         freeLock();
@@ -88,7 +86,7 @@ function Debounce(conf, cb) {
     function unlock() {
         execLock = false;
 
-        if (conf.trailing && pending) {
+        if (conf.trailing !== false && pending) {
             pending = false;
             _this.hit()
         }
