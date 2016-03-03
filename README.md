@@ -32,4 +32,4 @@ setInterval(function () {
 
 ```
 
-*note - written for node >=4.2.x. can be compiled to es5 though.
+*note - written for node >= 4.x. an es5 version is in es5 folder
