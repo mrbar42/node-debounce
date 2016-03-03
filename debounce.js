@@ -1,3 +1,9 @@
+// +----------------------------------------------------------------------+
+// | debounce.js v0.0.4 (https://github.com/mrbar42/node-debounce)        |
+// | Simple debounce/throttle module in less than 100 lines               |
+// |----------------------------------------------------------------------|
+// | Freely distributable under the WTFPL license.                        |
+// +----------------------------------------------------------------------+
 'use strict';
 
 /**
